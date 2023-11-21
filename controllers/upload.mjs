@@ -2,7 +2,9 @@ import signale from "signale";
 import stream from "stream";
 import { fileURLToPath } from 'url';
 import path from "path";
-import { google } from "googleapis";
+import {query} from '../database/mysql.js'
+import { google } from "googleapis"; 
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,13 +13,27 @@ export const uploadController = {
   get: (req, res) => {
     res.status(200).send("Root de /upload");
   },
+
   post: async (req, res) => {
-    console.log("REQ: ", req.files)
-    const data = await uploadFile(req.files);
-    if (data)
-        res.status(200).send({status: true, data:data});
-    else
+    const {name, description} = req.body;
+    const url_image = await uploadFile(req.files);
+    if (url_image) {
+      const sql = "INSERT INTO product (name, description, url_image) VALUES (?, ?, ?)";
+      const params = [name, description, url_image];
+      try {
+        const [result] = await query(sql, params);
+        console.log(result)
+        res.status(200).send({status: true, data:{
+          id_product: result.insertId,
+          name: name,
+          description: description,
+          url_image: url_image
+        }});
+      } catch (error) {
         res.status(200).send({status:false, data:{}})
+      }
+    }
+  
   },
 };
 
@@ -38,8 +54,8 @@ const uploadFile = async (fileObject) => {
     fields: "id,name,webViewLink",
   });
   //console.log(`Uploaded file ${data.name} ${data.id}`);
-  //console.log(JSON.stringify(data))
-  return data ? data : null;
+  console.log(data.webViewLink)
+  return data ? data.webViewLink : null;
 };
 
 const getDriveService = () => {

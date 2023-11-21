@@ -5,14 +5,18 @@ import fileUpload from 'express-fileupload'
 import signale from 'signale'
 import {upload} from './routes/upload.js'
 
+
 dotenv.config()
 const app = express()
 
 const port = process.env.PORT || 3000
 
+
 //Espacio de middleware's
 app.use(morgan('dev'))
 app.use(fileUpload())
+app.use(express.json())
+
 
 app.use("/upload",upload)
 
